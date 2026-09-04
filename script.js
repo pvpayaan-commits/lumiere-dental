@@ -232,22 +232,56 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Booking Form ---
+    // --- Booking Form (EmailJS) ---
     const bookingForm = document.getElementById('bookingForm');
     const formSuccess = document.getElementById('formSuccess');
+
+    const EMAILJS_PUBLIC_KEY = 'OtP5WKK3EKEV7Mis6';
+    const EMAILJS_SERVICE_ID = 'service_5q9oh6a';
+    const EMAILJS_TEMPLATE_ID = 'template_t5xdn0l';
+
+    if (window.emailjs) {
+        emailjs.init(EMAILJS_PUBLIC_KEY);
+    }
 
     if (bookingForm) {
         bookingForm.addEventListener('submit', (e) => {
             e.preventDefault();
 
             const submitBtn = bookingForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
             submitBtn.textContent = 'Sending...';
             submitBtn.disabled = true;
 
-            setTimeout(() => {
-                bookingForm.style.display = 'none';
-                formSuccess.style.display = 'block';
-            }, 1200);
+            if (!window.emailjs) {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+                alert('Email service is loading. Please try again in a moment.');
+                return;
+            }
+
+            const templateParams = {
+                site_name: 'Lumière Dental Studio',
+                from_name: document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value,
+                customer_email: document.getElementById('email').value,
+                customer_phone: document.getElementById('phone').value,
+                service: document.getElementById('service').value,
+                message: document.getElementById('message').value || 'No additional message'
+            };
+
+            emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
+                .then(() => {
+                    bookingForm.style.display = 'none';
+                    formSuccess.style.display = 'block';
+                })
+                .catch((error) => {
+                    console.error('EmailJS error:', error);
+                    submitBtn.textContent = 'Failed — Try Again';
+                    setTimeout(() => {
+                        submitBtn.textContent = originalText;
+                        submitBtn.disabled = false;
+                    }, 3000);
+                });
         });
     }
 
